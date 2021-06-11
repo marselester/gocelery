@@ -104,6 +104,50 @@ func TestWorkerRunTask(t *testing.T) {
 	}
 }
 
+func TestWorkerRunTaskError(t *testing.T) {
+	testCases := map[string]struct {
+		broker         CeleryBroker
+		backend        CeleryBackend
+		registeredTask interface{}
+	}{
+		"run task with redis broker/backend": {
+			broker:         redisBroker,
+			backend:        redisBackend,
+			registeredTask: add,
+		},
+		"run task with amqp broker/backend": {
+			broker:         amqpBroker,
+			backend:        amqpBackend,
+			registeredTask: add,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			celeryWorker := NewCeleryWorker(tc.broker, tc.backend, 1)
+			taskName := uuid.Must(uuid.NewV4()).String()
+			celeryWorker.Register(taskName, tc.registeredTask)
+
+			taskMessage := &TaskMessage{
+				ID:   uuid.Must(uuid.NewV4()).String(),
+				Task: taskName,
+				Args: []interface{}{
+					1,
+					"2",
+				},
+				Kwargs:  nil,
+				Retries: 1,
+				ETA:     nil,
+			}
+
+			_, err := celeryWorker.RunTask(taskMessage)
+			if err == nil {
+				t.Errorf("expected error due to reflect panic")
+			}
+		})
+	}
+}
+
 // TestWorkerExpiredTask tests expired tasks
 func TestWorkerExpiredTask(t *testing.T) {
 	now := time.Now()
