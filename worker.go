@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"runtime/debug"
 	"sync"
 	"time"
 
@@ -146,7 +147,12 @@ func (w *CeleryWorker) GetTask(name string) interface{} {
 }
 
 // RunTask runs celery task
-func (w *CeleryWorker) RunTask(message *TaskMessage) (*ResultMessage, error) {
+func (w *CeleryWorker) RunTask(message *TaskMessage) (msg *ResultMessage, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("unexpected error: %v: %s", r, debug.Stack())
+		}
+	}()
 
 	// ignore if the message is expired
 	if message.Expires != nil && message.Expires.UTC().Before(time.Now().UTC()) {
