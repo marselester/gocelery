@@ -41,7 +41,7 @@ func TestWorkerRegisterTask(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		celeryWorker := NewCeleryWorker(tc.broker, tc.backend, 1)
+		celeryWorker := NewCeleryWorker(tc.broker, tc.backend, 1, nil)
 		taskName := uuid.Must(uuid.NewV4()).String()
 		celeryWorker.Register(taskName, tc.registeredTask)
 		receivedTask := celeryWorker.GetTask(taskName)
@@ -76,7 +76,7 @@ func TestWorkerRunTask(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		celeryWorker := NewCeleryWorker(tc.broker, tc.backend, 1)
+		celeryWorker := NewCeleryWorker(tc.broker, tc.backend, 1, nil)
 		taskName := uuid.Must(uuid.NewV4()).String()
 		celeryWorker.Register(taskName, tc.registeredTask)
 		args := []interface{}{
@@ -124,7 +124,7 @@ func TestWorkerRunTaskError(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			celeryWorker := NewCeleryWorker(tc.broker, tc.backend, 1)
+			celeryWorker := NewCeleryWorker(tc.broker, tc.backend, 1, nil)
 			taskName := uuid.Must(uuid.NewV4()).String()
 			celeryWorker.Register(taskName, tc.registeredTask)
 
@@ -174,7 +174,7 @@ func TestWorkerExpiredTask(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		celeryWorker := NewCeleryWorker(tc.broker, tc.backend, 1)
+		celeryWorker := NewCeleryWorker(tc.broker, tc.backend, 1, nil)
 		taskName := uuid.Must(uuid.NewV4()).String()
 		celeryWorker.Register(taskName, tc.registeredTask)
 		args := []interface{}{
@@ -216,7 +216,7 @@ func TestWorkerNumWorkers(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		numWorkers := rand.Intn(10)
-		celeryWorker := NewCeleryWorker(tc.broker, tc.backend, numWorkers)
+		celeryWorker := NewCeleryWorker(tc.broker, tc.backend, numWorkers, nil)
 		celeryNumWorkers := celeryWorker.GetNumWorkers()
 		if numWorkers != celeryNumWorkers {
 			t.Errorf("test '%s': number of workers are different: %d vs %d", tc.name, numWorkers, celeryNumWorkers)
@@ -245,7 +245,7 @@ func TestWorkerStartStop(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		celeryWorker := NewCeleryWorker(tc.broker, tc.backend, 1000)
+		celeryWorker := NewCeleryWorker(tc.broker, tc.backend, 1000, nil)
 		go celeryWorker.StartWorker()
 		time.Sleep(100 * time.Millisecond)
 		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
