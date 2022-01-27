@@ -18,6 +18,7 @@ import (
 
 // CeleryWorker represents distributed task worker
 type CeleryWorker struct {
+	config          *Config
 	broker          CeleryBroker
 	backend         CeleryBackend
 	numWorkers      int
@@ -31,8 +32,9 @@ type CeleryWorker struct {
 }
 
 // NewCeleryWorker returns new celery worker
-func NewCeleryWorker(broker CeleryBroker, backend CeleryBackend, numWorkers int) *CeleryWorker {
+func NewCeleryWorker(broker CeleryBroker, backend CeleryBackend, numWorkers int, config *Config) *CeleryWorker {
 	return &CeleryWorker{
+		config:          config,
 		broker:          broker,
 		backend:         backend,
 		numWorkers:      numWorkers,
@@ -93,6 +95,10 @@ func (w *CeleryWorker) StartWorkerWithContext(ctx context.Context) {
 				}
 				defer releaseResultMessage(resultMsg)
 
+				if w.config.ignoreResult {
+					// There will be no celery-task-meta-... keys in Redis.
+					return nil
+				}
 				// push result to backend
 				err = w.backend.SetResult(taskMessage.ID, resultMsg)
 				if err != nil {
